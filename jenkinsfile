@@ -1,50 +1,61 @@
 pipeline {
     agent any
+
     tools {
         jdk 'jdk21'
         nodejs 'node24'
     }
-    
+
     stages {
-        stage ("clean workspace") {
+        stage("Clean Workspace") {
             steps {
                 cleanWs()
             }
         }
-        stage ("Git Checkout") {
+
+        stage("Git Checkout") {
             steps {
                 git 'https://github.com/pradeeshan/Food-App.git'
             }
         }
-        
+
         stage("Install NPM Dependencies") {
             steps {
                 bat "npm install"
             }
         }
-        
-        
-        stage ("Build Docker Image") {
+
+        stage("Build Docker Image") {
             steps {
                 bat "docker build -t zomato ."
             }
         }
-        stage ("Tag & Push to DockerHub") {
+
+        stage("Tag & Push to DockerHub") {
             steps {
                 script {
                     withDockerRegistry(credentialsId: 'docker') {
-                        bat "docker tag zomato pradeeshan/zomato:latest "
-                        bat "docker push pradeeshan/zomato:latest "
+                        bat "docker tag zomato pradeeshan/zomato:latest"
+                        bat "docker push pradeeshan/zomato:latest"
                     }
                 }
             }
         }
-        
-        stage ("Deploy to Container") {
+
+        stage("Deploy to Container") {
             steps {
-                bat 'docker run -d --name zomato -p 3000:3000 pradeeshan/zomato:latest'
+                script {
+                    
+                    bat '''
+                    docker stop zomato || echo "No container to stop"
+                    docker rm zomato || echo "No container to remove"
+                    '''
+                    
+                    bat "docker run -d --name zomato -p 3000:3000 pradeeshan/zomato:latest"
+                }
             }
         }
     }
+
     
 }
