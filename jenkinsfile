@@ -25,6 +25,22 @@ pipeline {
             }
         }
 
+        stage("Test") {
+            failFast true
+            parallel {
+                stage("Unit Tests") {
+                    steps {
+                        bat "npm run test:unit"
+                    }
+                }
+                stage("Integration Tests") {
+                    steps {
+                        bat "npm run test:integration"
+                    }
+                }
+            }
+        }
+
         stage("Build Docker Image") {
             steps {
                 bat "docker build -t zomato ."
@@ -45,17 +61,13 @@ pipeline {
         stage("Deploy to Container") {
             steps {
                 script {
-                    
                     bat '''
                     docker stop zomato || echo "No container to stop"
                     docker rm zomato || echo "No container to remove"
                     '''
-                    
                     bat "docker run -d --name zomato -p 3000:3000 pradeeshan/zomato:latest"
                 }
             }
         }
     }
-
-    
 }
