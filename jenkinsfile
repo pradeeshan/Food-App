@@ -5,7 +5,10 @@ pipeline {
         jdk 'jdk21'
         nodejs 'node24'
     }
-
+    environment {
+        SONARQUBE_ENV = 'sonar-server' 
+        SCANNER = 'sonar-scanner'   
+    }
     stages {
         stage("Clean Workspace") {
             steps {
@@ -40,7 +43,21 @@ pipeline {
                 }
             }
         }
+        stage("SonarQube Analysis") {
+            steps {
+                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                    bat "${SCANNER} -Dsonar.projectKey=zomato -Dsonar.sources=. -Dsonar.host.url=$SONAR_HOST_URL"
+                }
+            }
+        }
 
+        stage("Quality Gate") {
+            steps {
+                {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token'
+                }
+            }
+        }
         stage("Build Docker Image") {
             steps {
                 bat "docker build -t zomato ."
