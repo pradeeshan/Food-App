@@ -50,6 +50,7 @@ pipeline {
                     bat '''
                     docker run --rm ^
                       -e SONAR_HOST_URL=http://host.docker.internal:9000 ^
+                      -e SONAR_LOGIN=squ_4ed9a1c70e24cd62c9e43e9f92e37fe7c8f89d3f ^
                       -v "%cd%:/usr/src" ^
                       sonarsource/sonar-scanner-cli ^
                       -Dsonar.projectKey=zomato ^
